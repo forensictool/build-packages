@@ -42,4 +42,5 @@ for reponame in debpackages:
 		print("\tOK ");
 	
 	
+# TODO make different packages and package all-in-one
 
