@@ -1,4 +1,26 @@
 {
-	"coex-plugin-detect-ubuntu": "https://github.com/tusur-coex/coex-plugin-detect-ubuntu.git",
-	"coex-plugin-task-searchgitrepo": "https://github.com/tusur-coex/coex-plugin-task-searchgitrepo.git"
+	"maintainer": {
+		"name": "Evgenii Sopov",
+		"email": "mrseakg@gmail.com"
+	},
+	"build" : [
+		{
+			"type" : "git",
+			"name": "coex-core",
+			"url": "https://github.com/tusur-coex/coex-core.git",
+			"output" : "bin"
+		},
+		{
+			"type" : "git",
+			"name": "coex-plugin-task-searchgitrepo",
+			"url": "https://github.com/tusur-coex/coex-plugin-task-searchgitrepo.git",
+			"output" : "bin"
+		},
+		{
+			"type" : "git",
+			"name" : "coex-plugin-detect-ubuntu",
+			"url": "https://github.com/tusur-coex/coex-plugin-detect-ubuntu.git",
+			"output" : "bin"
+		}
+	]
 }
