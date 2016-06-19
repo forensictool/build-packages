@@ -3,24 +3,27 @@
 		"name": "Evgenii Sopov",
 		"email": "mrseakg@gmail.com"
 	},
+	"outputfolder" : "output",
 	"build" : [
 		{
 			"type" : "git",
 			"name": "coex-core",
-			"url": "https://github.com/tusur-coex/coex-core.git",
-			"output" : "bin"
-		},
-		{
-			"type" : "git",
-			"name": "coex-plugin-task-searchgitrepo",
-			"url": "https://github.com/tusur-coex/coex-plugin-task-searchgitrepo.git",
-			"output" : "bin"
+			"url": "https://github.com/tusur-coex/coex-core.git"
 		},
 		{
 			"type" : "git",
 			"name" : "coex-plugin-detect-ubuntu",
-			"url": "https://github.com/tusur-coex/coex-plugin-detect-ubuntu.git",
-			"output" : "bin"
+			"url": "https://github.com/tusur-coex/coex-plugin-detect-ubuntu.git"
+		},
+		{
+			"type" : "git",
+			"name": "coex-plugin-task-searchgitrepo",
+			"url": "https://github.com/tusur-coex/coex-plugin-task-searchgitrepo.git"
+		},
+		{
+			"type" : "git",
+			"name": "coex-plugin-task-skype",
+			"url": "https://github.com/tusur-coex/coex-plugin-task-skype.git"
 		}
 	]
 }

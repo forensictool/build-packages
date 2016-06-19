@@ -11,7 +11,7 @@ class DebPackage:
 		return self
 	def __exit__(self, exc_type, exc_value, traceback):
 		print(" -> Remove tmp folder")
-		# self.rmTmp()
+		self.rmTmp()
 	def check(self):
 		print("Test")
 	def parseVersion(self):
@@ -53,18 +53,31 @@ class DebPackage:
 		self.writeChangeLog(item)
 		self.writeControlFile(item)
 		self.writePostInstall(item)
-		self.writeMd5Sum(item)
 		self.copyBinaryApp(item)
+		self.writeMd5Sum(item)
 		self.fixCHMOD(item)
 		self.makePackage(item)
 
 	def buildlib(self, item):
 		buildtype = item['type']
 		print(" -> Build " + buildtype)
-	
+		self.rmTmp();
+		self.makeTmpDirs('lib', item['name']);
+		self.makeProject(item['project'])
+		self.writeCopyright(item)
+		self.writeReadme(item)
+		self.writeChangeLog(item)
+		self.writeControlFile(item)
+		self.writePostInstall(item)
+		self.copyBinaryLib(item)
+		self.writeMd5Sum(item)
+		self.fixCHMOD(item)
+		self.makePackage(item)
+
 	def buildappui(self, item):
 		buildtype = item['type']
 		print(" -> Build " + buildtype)
+		print("TODO")
 	
 	def make(self):
 		print(" -> Build package " + self.packagefolder)
@@ -83,11 +96,10 @@ class DebPackage:
 		for item in self.build:
 			if item['type'] == 'app':
 				self.buildapp(item)
-				sys.exit(0)
 			elif item['type'] == 'lib':
 				self.buildlib(item)
 			elif item['type'] == 'app-ui':
-				self.buildlib(item)
+				self.buildappui(item)
 			else:
 				print(" -> Failed build: unknown type")
 
@@ -111,9 +123,16 @@ class DebPackage:
 		## BUILD PROJECT
 		os.popen("cd " + self.packagefolder + " && rm -rf tmp && rm -rf bin && qmake " + projectname + " && make").read()
 
+	def packageName(self, item):
+		packagename = item['name']
+		if item['type'] == "lib":
+			packagename = os.popen("objdump -p " + self.packagefolder + "/bin/" + item['name'] + ".so." + self.version + " | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' | sed -r -e's/([0-9])\.so\./\1-/; s/\.so(\.|$)//; y/_/-/; s/(.*)/\L&/'").read();
+			packagename = packagename.strip();
+		return packagename;
+
 	## COPYRIGHT
 	def writeCopyright(self, item):
-		dirpath = 'tmp/debian/usr/share/doc/' + item['name']
+		dirpath = 'tmp/debian/usr/share/doc/' + self.packageName(item)
 		if not os.path.exists(dirpath):
 			os.makedirs(dirpath)
 		with open(dirpath + '/copyright','w') as f:
@@ -135,10 +154,11 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.""")
+		os.system("chmod 0644 " + dirpath + '/copyright')
 
 	## THE README FILE
 	def writeReadme(self, item):
-		dirpath = 'tmp/debian/usr/share/doc/' + item['name']
+		dirpath = 'tmp/debian/usr/share/doc/' + self.packageName(item)
 		if not os.path.exists(dirpath):
 			os.makedirs(dirpath)
 		with open(dirpath + '/README','w') as f:
@@ -155,10 +175,11 @@ Author: Coex Group
 Developers:
 Evgenii Sopov (mrseakg@gamil.com)
 """)
+			os.system("chmod 0644 " + dirpath + '/README')
 
 	## THE CHNAGELOG FILE
 	def writeChangeLog(self, item):
-		dirpath = 'tmp/debian/usr/share/doc/' + item['name']
+		dirpath = 'tmp/debian/usr/share/doc/' + self.packageName(item)
 		if not os.path.exists(dirpath):
 			os.makedirs(dirpath)
 		with open(dirpath + '/changelog','w') as f:
@@ -168,14 +189,16 @@ Evgenii Sopov (mrseakg@gamil.com)
 			f.write(str(os.popen('git log --no-merges --format="  * %s" v' + self.version).read()))
 			f.write("\n")
 			f.write("-- " + self.maintainer['name'] + " " + self.maintainer['email'] + " " + time.strftime("%Y-%m-%d %H:%M") + "\n")
-		os.system("gzip -9 -n tmp/debian/usr/share/doc/" + item['name'] + "/changelog")
+		os.system("gzip -9 -n " + dirpath + "/changelog")
+		os.system("chmod 0644 " + dirpath + '/changelog.gz')
 
 	## THE CONTROL FILE
 	## TODO Depends: libc6
 	def writeControlFile(self, item):
+		
 		with open('tmp/debian/DEBIAN/control','w') as f:
 			today = datetime.date.today()
-			f.write("""Package: """ + item['name'] + """
+			f.write("""Package: """ + self.packageName(item) + """
 Version: """ + self.version + """
 Section: admin
 Priority: optional
@@ -203,29 +226,34 @@ exit 0
 	## COPY BINARY APP
 	def copyBinaryApp(self, item):
 		os.popen("strip -S -o tmp/debian/usr/bin/" + item['name'] + " " + self.packagefolder + "/bin/" + item['name']).read()
-		os.system("chmod 0644 tmp/debian/usr/bin/" + item['name'])
+		os.system("chmod 0755 -R tmp/debian/usr/bin")
+		os.system("chmod 0755 tmp/debian/usr/bin/" + item['name'])
 
 	## COPY BINARY LIB
 	def copyBinaryLib(self, item):
-		## COPY BINARY
-		os.popen("strip -S -o dist/debian/usr/lib/" + debpackage['lib'] + "." + VERSION + " bin/" + debpackage['lib'] + "." + VERSION).read()
-		os.popen("cd tmp/debian/usr/lib/ && ln -s " + debpackage['lib'] + "." + VERSION + " " + debpackage['lib'] + '.' + debpackage['version']['major']).read()
+		libname012 = item['name'] + ".so." + self.version
+		libname    = item['name'] + ".so"
+		libname0   = item['name'] + ".so." + self.version_major
+		libname01  = item['name'] + ".so." + self.version_major + "." + self.version_minor
+		os.system("chmod 0755 -R tmp/debian/usr/lib")
+		os.system("strip -S -o tmp/debian/usr/lib/" + libname012 + " " + self.packagefolder + "/bin/" + libname012)
+		os.popen("cd tmp/debian/usr/lib/ && ln -s " + libname012 + " " + libname).read()
+		os.popen("cd tmp/debian/usr/lib/ && ln -s " + libname012 + " " + libname0).read()
+		os.popen("cd tmp/debian/usr/lib/ && ln -s " + libname012 + " " + libname01).read()
+		os.system("chmod 0644 tmp/debian/usr/lib/" + libname)
+		os.system("chmod 0644 tmp/debian/usr/lib/" + libname0)
+		os.system("chmod 0644 tmp/debian/usr/lib/" + libname01)
+		os.system("chmod 0644 tmp/debian/usr/lib/" + libname012)
 
 	def fixCHMOD(self, item):
 		## non-standard-dir-perm usr/ 0775 != 0755
 		os.system("chmod 0644 tmp/debian/DEBIAN/control")
 		os.system("chmod 0644 tmp/debian/DEBIAN/md5sums")
-
 		os.system("chmod 0755 tmp/debian/DEBIAN/postinst")
 		os.system("chmod 0755 tmp/debian/usr")
-		os.system("chmod 0755 -R tmp/debian/usr/bin")
-		
 		os.system("chmod 0755 tmp/debian/usr/share")
 		os.system("chmod 0755 tmp/debian/usr/share/doc")
-		os.system("chmod 0755 tmp/debian/usr/share/doc/" + item['name'])
-		os.system("chmod 0644 tmp/debian/usr/share/doc/" + item['name'] + '/copyright')
-		os.system("chmod 0644 tmp/debian/usr/share/doc/" + item['name'] + '/README')
-		os.system("chmod 0644 tmp/debian/usr/share/doc/" + item['name'] + '/changelog.gz')
+		os.system("chmod 0755 tmp/debian/usr/share/doc/" + self.packageName(item))
 		os.system("chmod 0755 tmp/debian/usr/share/man")
 
 	## MAKE PACKAGE
