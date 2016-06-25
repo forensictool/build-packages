@@ -7,23 +7,23 @@
 	"build" : [
 		{
 			"type" : "git",
-			"name": "coex-core",
-			"url": "https://github.com/tusur-coex/coex-core.git"
+			"name": "forensictool-core",
+			"url": "https://github.com/forensictool/forensictool-core.git"
 		},
 		{
 			"type" : "git",
-			"name" : "coex-plugin-detect-ubuntu",
-			"url": "https://github.com/tusur-coex/coex-plugin-detect-ubuntu.git"
+			"name" : "forensictool-plugin-detectubuntu",
+			"url": "https://github.com/forensictool/forensictool-plugin-detectubuntu.git"
 		},
 		{
 			"type" : "git",
-			"name": "coex-plugin-task-searchgitrepo",
-			"url": "https://github.com/tusur-coex/coex-plugin-task-searchgitrepo.git"
+			"name": "forensictool-plugin-git",
+			"url": "https://github.com/forensictool/forensictool-plugin-git.git"
 		},
 		{
 			"type" : "git",
-			"name": "coex-plugin-task-skype",
-			"url": "https://github.com/tusur-coex/coex-plugin-task-skype.git"
+			"name": "forensictool-plugin-skype",
+			"url": "https://github.com/forensictool/forensictool-plugin-skype.git"
 		}
 	]
 }
