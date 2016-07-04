@@ -24,6 +24,11 @@
 			"type" : "git",
 			"name": "forensictool-plugin-skype",
 			"url": "https://github.com/forensictool/forensictool-plugin-skype.git"
+		},
+		{
+			"type" : "git",
+			"name": "forensictool-plugin-icq",
+			"url": "https://github.com/forensictool/forensictool-plugin-icq.git"
 		}
 	]
 }
